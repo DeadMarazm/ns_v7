@@ -1,0 +1,28 @@
+{% extends "main/base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<h1>Привет, кАтлет! {{ current_user.username }}</h1>
+<h2>Главная</h2>
+<p>Список из 3-х последних тренировок</p>
+<br>
+<p>Количество тренировок: {{ wods_count }}</p>
+{% for wod in wods %}
+
+    <div class="alert alert-info">
+        <h3>{{ wod.date_posted.date() }}</h3>
+        <br>
+        <h4>Разминка</h4>
+        {{ wod.warm_up | safe }}
+        <br>
+        <h4>Комплекс...</h4>
+        <br>
+        <button class="btn-warning">
+        <a href="{{ url_for('wod_bp.wod_detail', id=wod.id) }}">Подробнее</a>
+        </button>
+
+
+    </div>
+{% endfor %}
+<br>
+{% endblock %}
