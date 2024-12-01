@@ -1,7 +1,9 @@
+from datetime import datetime
 import pytest
 import os
 import sys
 from app import create_app, db
+from app.data.models import WorkoutModel
 from app.forms.forms import RegistrationForm, LoginForm, EditProfileForm, ResultForm
 from app.tests.factories.model_factory import ModelFactory
 from config.test_config import TestConfig
@@ -59,6 +61,19 @@ def logged_in_client(client, test_user, app):
             session['_user_id'] = str(test_user.id)
             session['_fresh'] = True
     return client
+
+
+# conftest.py
+@pytest.fixture
+def test_5_workouts(app):
+    """5 workouts."""
+    for i in range(5):
+        workout = WorkoutModel(name=f'Test Workout {i + 1}', warm_up=f'Test Warm-up {i + 1}',
+                               workout=f'Test Workout {i + 1}',
+                               description=f'Test Description {i + 1}', date_posted=datetime.now())
+        db.session.add(workout)
+    db.session.commit()
+    return [workout for workout in WorkoutModel.query.all()]
 
 
 @pytest.fixture
