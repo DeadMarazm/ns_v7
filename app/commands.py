@@ -23,23 +23,23 @@ def shell():
 
 @click.command(name='create_wods')
 @with_appcontext
-def create_wods():
+def create_workouts():
     """Создает тестовые тренировки в базе данных"""
     for i in range(1, 6):
-        wod = WorkoutModel(
+        workout = WorkoutModel(
             name=f"Тренировка {i}",
             warm_up=f"Разминка {i}",
             workout=f"Основной комплекс {i}",
             description=f"Описание тренировки {i}",
             date_posted=datetime.now()
         )
-        db.session.add(wod)
+        db.session.add(workout)
         try:
             db.session.commit()  # commit после каждого добавления
-            logger.info(f"Добавлена тренировка: {wod.name}")
+            logger.info(f"Добавлена тренировка: {workout.name}")
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Ошибка при добавлении тренировки {wod.name}: {e}")
+            logger.error(f"Ошибка при добавлении тренировки {workout.name}: {e}")
 
     count = WorkoutModel.query.count()
     logger.info(f"Всего тренировок после добавления: {count}")
