@@ -30,9 +30,10 @@ def create_app(config_class=Config):
     app.register_blueprint(workout_bp)
 
     # Регистрация CLI-команд
-    from app.commands import shell, create_workouts, create_users
+    from app.utils.commands import shell, create_workouts,create_users, delete_db
     app.cli.add_command(shell)
     app.cli.add_command(create_workouts)
     app.cli.add_command(create_users)
+    app.cli.add_command(delete_db)
 
     return app

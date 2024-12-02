@@ -16,6 +16,9 @@ flask create_workouts
 Генерация 3 Пользователей:
 flask create_users
 
+Удаление файла базы данных
+flask delete_db
+
 3. Тесты:
 Запуск:
 pytest

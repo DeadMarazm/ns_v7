@@ -1,3 +1,4 @@
+from flask import current_app
 from flask.cli import with_appcontext
 import click
 from app.data.repositories.user_repository import UserRepository
@@ -6,6 +7,8 @@ from app.extensions import db
 from app.data.models import UserModel, WorkoutModel, ResultModel
 from datetime import datetime
 import logging
+
+from app.utils.database import delete_database_file
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,16 +24,66 @@ def shell():
     code.interact(local=shell_context)
 
 
+@click.command(name='delete_db')
+@with_appcontext
+def delete_db():
+    """Удаляет файл базы данных."""
+    from app import create_app
+    app = create_app()
+    with app.app_context():
+        delete_database_file(app)
+
+
 @click.command(name='create_workouts')
 @with_appcontext
 def create_workouts():
     """Создает тестовые тренировки в базе данных"""
-    for i in range(1, 6):
+    workouts_data = [
+        {
+            "name": "",
+            "warm_up": "3 раунда:\n- 5+5 вынос колена-коленовсторону-становая на одной\n- 5+5 перешагивание в "
+                       "планке\n- 10 дворников",
+            "workout": "3 раунда на время:\n- 20 рывков одной рукой\n- 20 рывков одной рукой\n- 20 берпи разворот на "
+                       "180",
+            "description": "Если есть тяжелые спорт снаряды возьмите их"
+        },
+        {
+            "name": "",
+            "warm_up": "3 раунда:\n- 10 обратные скандинавские наклоны\n- 20 краб тач\n- 15 суперменов",
+            "workout": "10 раундов в 2 мин*:\n - 30 сек стульчик на носках\n- 20 джампинг Джеков\n- 10 подносов ног в "
+                       "планке",
+            "description": "Если не успеваете выполнить за 2 мин значит тренировка закончилась"
+        },
+        {
+            "name": "Табата*",
+            "warm_up": "3 раунда:\n- 10 червяков на месте\n- 10+10 казаки\n- 15(20) подносов ног сидя",
+            "workout": "Выпад статика/выпад динамика*\nЛодочка статика/Складки\nСупермен "
+                       "статика/Диагональные супермены",
+            "description": "*8 раундов максимум повторений\nза 20 сек отдых 10 сек\n*Чередуя статику динамику\n*8+8 "
+                           "раундов на каждую ногу"
+        },
+        {
+            "name": "",
+            "warm_up": "3 раунда:\n- 5+5+5+5 вращение бедра лежа\n- 10+10 боковых скручиваний\n- 20 касаний носков из "
+                       "планки",
+            "workout": "2 х Как можно больше повт за 2 мин @ 1 мин:\n- 50 приседаний\n1. Макс повт берпи\n2. Макс "
+                       "повт пресс",
+            "description": ""
+        },
+        {
+            "name": "МССоловьев",
+            "warm_up": "3 раунда:\n- 10 приседаний на носках\n- 10 Супермен Y-W\n- 10 касаний носков из планки",
+            "workout": "9 раундов:\n- 3 берпи\n- 22 прыгающих выпадов\n- 34 Овечкина",
+            "description": ""
+        }
+    ]
+
+    for workout_data in workouts_data:
         workout = WorkoutModel(
-            name=f"Тренировка {i}",
-            warm_up=f"Разминка {i}",
-            workout=f"Основной комплекс {i}",
-            description=f"Описание тренировки {i}",
+            name=workout_data["name"],
+            warm_up=workout_data["warm_up"],
+            workout=workout_data["workout"],
+            description=workout_data["description"],
             date_posted=datetime.now()
         )
         db.session.add(workout)
