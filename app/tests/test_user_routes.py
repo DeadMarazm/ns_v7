@@ -20,7 +20,7 @@ class TestUserRoutes:
         # Вспомогательный метод для выхода пользователя.
         return client.get(url_for("auth_bp.logout"), follow_redirects=True)
 
-    def test_profile_page_requires_login(self, client):
+    def test_profile_page_requires_login(self, client, logout_after_test):
         """ Тест: страница профиля требует авторизацию """
         response = client.get(url_for("user_bp.profile", username="testuser"))
         assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}"
@@ -71,7 +71,7 @@ class TestUserRoutes:
         assert user is not None
         assert user.username == "newusername"
 
-    def test_edit_profile_requires_login(self, client):
+    def test_edit_profile_requires_login(self, client, logout_after_test):
         """ Тест: доступ к редактированию профиля требует авторизацию"""
         response = client.get(url_for("user_bp.edit_profile"))
         assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}"

@@ -21,7 +21,7 @@ def shell():
     code.interact(local=shell_context)
 
 
-@click.command(name='create_wods')
+@click.command(name='create_workouts')
 @with_appcontext
 def create_workouts():
     """Создает тестовые тренировки в базе данных"""

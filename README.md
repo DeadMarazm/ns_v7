@@ -11,7 +11,7 @@ flask db migrate -m "#"
 flask db upgrade
 
 Генерация 5 Тренировок Дня:
-flask create_wods
+flask create_workouts
 
 Генерация 3 Пользователей:
 flask create_users

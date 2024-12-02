@@ -2,6 +2,7 @@ from datetime import datetime
 import pytest
 import os
 import sys
+from flask import url_for
 from app import create_app, db
 from app.data.models import WorkoutModel
 from app.forms.forms import RegistrationForm, LoginForm, EditProfileForm, ResultForm
@@ -61,6 +62,13 @@ def logged_in_client(client, test_user, app):
             session['_user_id'] = str(test_user.id)
             session['_fresh'] = True
     return client
+
+
+@pytest.fixture
+def logout_after_test(client):
+    """Ensures the user is logged out after the test runs."""
+    yield
+    client.get(url_for('auth_bp.logout'))
 
 
 # conftest.py
