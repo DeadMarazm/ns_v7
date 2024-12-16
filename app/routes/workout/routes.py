@@ -54,20 +54,3 @@ def workout_detail(id):
                            results=results, total_completions=total_completions)
 
 
-@workout_bp.route('/workouts/<int:id>/confirm')
-@login_required
-def workout_confirm(id):
-    """ Подтверждает выполнение тренировки (старый вариант, вероятно, не нужен). """
-    # Этот маршрут, вероятно, дублирует функциональность формы в wod_detail
-    # и может быть удален, если он больше не используется.
-
-    workout = WorkoutRepository.get_workout_by_id(id)
-    if not workout:
-        abort(404)
-
-    if current_user.is_authenticated:
-        result = Result(confirm=True, user_id=current_user.id, workout_id=id)
-        ResultRepository.save_result(result)  # Используем репозиторий
-        flash('Вы подтвердили тренировку!')
-
-    return redirect(url_for('workout_bp.workout_detail', id=id))

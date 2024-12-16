@@ -58,9 +58,11 @@ class UserRepository:
         db.session.flush()
         user.id = user_model.id
 
+    class UserAlreadyExistsError(Exception):
+        pass
+
     @staticmethod
     def _validate_unique_fields(user: User):
         if UserModel.query.filter_by(username=user.username).first():
-            raise ValueError(f"Username '{user.username}' already exists")
-        if UserModel.query.filter_by(email=user.email).first():
-            raise ValueError(f"Email '{user.email}' already exists")
+            raise UserAlreadyExistsError(f"Username '{user.username}' already exists")
+
