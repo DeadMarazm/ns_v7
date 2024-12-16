@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
 from app.forms.forms import RegistrationForm, LoginForm
 from . import auth_bp
-from ...data.repositories.user_repository import UserRepository
+from app.data.repositories.user_repository import UserRepository
 from ...domain.user import User
 
 
@@ -33,37 +33,18 @@ def register():
     """ Маршрут для регистрации пользователя """
     form = RegistrationForm()
     if form.validate_on_submit():
-        existing_user = UserRepository.get_user_by_username(form.username.data)
-        existing_email = UserRepository.get_user_by_email(form.email.data)
-
-        # Проверка существующего пользователя по username
-        if existing_user:
-            flash(f"Пользователь с именем '{form.username.data}' уже существует.", 'danger')
-            return render_template('auth/register.html', form=form,
-                                   title='Регистрация')  # Возвращаем страницу регистрации
-
-        # Проверка существующего пользователя по email
-        if existing_email:
-            flash(f"Пользователь с email '{form.email.data}' уже существует.", 'danger')
-            return render_template('auth/register.html', form=form,
-                                   title='Регистрация')  # Возвращаем страницу регистрации
-
-        # Создаем нового пользователя
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            password=form.password.data
-        )
-        user.set_password(user.password)  # Хэшируем пароль
-        print(f"Хэшированный пароль: {user.password_hash}")
         try:
+            # Создаем нового пользователя
+            user = User(
+                username=form.username.data,
+                email=form.email.data,
+                password=form.password.data
+            )
             UserRepository.save_user(user)
             login_user(user)
             flash('Вы успешно зарегистрированы!', 'success')
             return redirect(url_for('index_bp.index'))
-        except Exception as e:
-            flash('Ошибка регистрации. Попробуйте позже.', 'danger')
-            return render_template('auth/register.html', form=form,
-                                   title='Регистрация')  # Возвращаем страницу регистрации
+        except ValueError as e:
+            flash(str(e), 'danger')
 
     return render_template('auth/register.html', form=form, title='Регистрация')

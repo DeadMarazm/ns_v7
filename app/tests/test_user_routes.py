@@ -81,7 +81,7 @@ class TestUserRoutes:
 
         # Проверяем наличие параметра 'next' с правильным значением
         expected_next_relative = url_for('user_bp.edit_profile', _external=False)
-        expected_url = url_for('auth_bp.login', next=expected_next_relative)
+        expected_url = url_for('auth_bp.login', next=expected_next_relative, _external=True)
 
         # Преобразуем относительный URL в абсолютный (если нужно)
         if not redirect_url.startswith('http'):

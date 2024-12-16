@@ -10,8 +10,10 @@ class TestForms:
         assert registration_form_valid.validate(), "Форма регистрации с валидными данными не прошла валидацию."
 
     def test_registration_form_invalid(self, registration_form_invalid):
-        """Тест формы регистрации с некорректными данными"""
-        assert not registration_form_invalid.validate(), "Форма регистрации с невалидными данными прошла валидацию."
+        assert not registration_form_invalid.validate()
+        assert 'This field is required.' in registration_form_invalid.username.errors
+        assert 'Invalid email address.' in registration_form_invalid.email.errors
+        assert 'Field must be at least 8 characters long.' in registration_form_invalid.password.errors
 
     def test_login_form_valid(self, login_form_valid):
         """Тест формы входа с корректными данными"""

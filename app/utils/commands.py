@@ -1,14 +1,12 @@
-from flask import current_app
 from flask.cli import with_appcontext
 import click
 from app.data.repositories.user_repository import UserRepository
 from app.domain.user import User
-from app.extensions import db
+from app.core.extensions import db
 from app.data.models import UserModel, WorkoutModel, ResultModel
 from datetime import datetime
 import logging
-
-from app.utils.database import delete_database_file
+from app.core.database import delete_database_file
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

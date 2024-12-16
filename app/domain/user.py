@@ -1,3 +1,6 @@
+from werkzeug.security import generate_password_hash, check_password_hash
+
+
 class User:
     def __init__(self, id=None, username='', email='', password=None,
                  password_hash=None, active=True, confirmed_at=None):
@@ -13,14 +16,10 @@ class User:
 
     def set_password(self, password):
         """ Хеширование пароля """
-        from werkzeug.security import generate_password_hash
         self.password_hash = generate_password_hash(password)
-        if not self.password_hash:
-            raise ValueError("Пароль не был успешно зашифрован")
 
     def check_password(self, password):
         """ Проверка пароля """
-        from werkzeug.security import check_password_hash
         return check_password_hash(self.password_hash, password)
 
     @property

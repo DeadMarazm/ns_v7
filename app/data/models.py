@@ -1,7 +1,12 @@
 from datetime import datetime
-from app import db
+from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import (
+    Boolean, Column, DateTime,
+    ForeignKey, Integer, String, Text
+)
+from app.core.extensions import db
 
-# Таблица связи "многие ко многим" между пользователями и ролями
+
 roles_users = db.Table(
     'roles_users',
     db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
@@ -12,43 +17,43 @@ roles_users = db.Table(
 class UserModel(db.Model):
     __tablename__ = "user"
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(255), unique=True)
-    password_hash = db.Column(db.String(255))
-    active = db.Column(db.Boolean())
-    confirmed_at = db.Column(db.DateTime())
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    username: Mapped[str] = Column(String(64), unique=True)
+    email: Mapped[str] = Column(String(120), unique=True)
+    password_hash: Mapped[str] = Column(String(128))
+    active: Mapped[bool] = Column(Boolean, default=True)
+    confirmed_at: Mapped[datetime] = Column(DateTime, nullable=True)
 
-    roles = db.relationship('RoleModel', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
-    results = db.relationship('ResultModel', backref='author', lazy='dynamic')
+    roles = relationship("Role", backref="users")
+    results = relationship("Result", backref="user")
 
 
 class RoleModel(db.Model):
     __tablename__ = "role"
 
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
-    description = db.Column(db.String(255))
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    name: Mapped[str] = Column(String(80), unique=True)
+    description: Mapped[str] = Column(String(255))
 
 
 class WorkoutModel(db.Model):
     __tablename__ = "workout"
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    warm_up = db.Column(db.Text, nullable=False)
-    workout = db.Column(db.Text, nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    name: Mapped[str] = Column(String(100), nullable=False)
+    warm_up: Mapped[str] = Column(Text, nullable=False)
+    workout: Mapped[str] = Column(Text, nullable=False)
+    description: Mapped[str] = Column(Text, nullable=False)
+    date_posted: Mapped[datetime] = Column(DateTime, nullable=False, default=datetime.now)
 
-    results = db.relationship("ResultModel", backref="workout", lazy=True)
+    results = relationship("Result", backref="workout")
 
 
 class ResultModel(db.Model):
     __tablename__ = "result"
 
-    id = db.Column(db.Integer, primary_key=True)
-    confirm = db.Column(db.Boolean())
-    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    workout_id = db.Column(db.Integer, db.ForeignKey("workout.id"))
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    confirm: Mapped[bool] = Column(Boolean)
+    date_posted: Mapped[datetime] = Column(DateTime, nullable=False, default=datetime.now)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("user.id"))
+    workout_id: Mapped[int] = Column(Integer, ForeignKey("workout.id"))

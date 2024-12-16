@@ -1,5 +1,5 @@
 import pytest
-from app.extensions import db
+from app.core.extensions import db
 from app.data.models import UserModel, WorkoutModel, ResultModel
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -11,8 +11,14 @@ class TestModels:
     def test_user_model(self, app):
         """Тест модели пользователя"""
         with app.app_context():
-            user = UserModel(username='unique_test_user_1', email='test1@example.com')
-            user.password_hash = generate_password_hash("password")
+            try:
+                user = UserModel(username='unique_test_user_1',
+                                 email='test1@example.com'
+                                 )
+                user.password_hash = generate_password_hash("password")
+            finally:
+                db.session.rollback()
+
             db.session.add(user)
             db.session.commit()
             assert user.id is not None
@@ -21,12 +27,15 @@ class TestModels:
     def test_workout_model(self, app):
         """Тест модели тренировки"""
         with app.app_context():
-            wod = WorkoutModel(
-                name='Тестовая тренировка',
-                warm_up='Тестовая разминка',
-                workout='Тестовая тренировка',
-                description='Описание тренировки'
-            )
+            try:
+                wod = WorkoutModel(name='Тестовая тренировка',
+                                   warm_up='Тестовая разминка',
+                                   workout='Тестовая тренировка',
+                                   description='Описание тренировки'
+                                   )
+            finally:
+                db.session.rollback()
+
             db.session.add(wod)
             db.session.commit()
             assert wod.id is not None

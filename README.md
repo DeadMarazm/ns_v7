@@ -23,8 +23,6 @@ flask delete_db
 Запуск:
 pytest
 
-
-
 4. запуск проекта run.py
 
 
