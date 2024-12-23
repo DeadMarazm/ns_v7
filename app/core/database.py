@@ -1,16 +1,15 @@
-import os
-from app.core.extensions import db
+from app.core.extensions import SessionLocal, engine, Base
 
 
-def delete_database_file(app):
-    """Функция удаления файла базы данных."""
-    with app.app_context():
-        db.session.remove()
-        db.get_engine(app).dispose()
+def get_db():
+    """Функция зависимостей для получения сеанса работы с базой данных."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')  # remove sqlite prefix
-        if os.path.exists(db_path):
-            os.remove(db_path)
-            print(f"Database file {db_path} deleted successfully")
-        else:
-            print(f"Database file {db_path} not found")
+
+def create_tables():
+    """Создает таблицы базы данных."""
+    Base.metadata.create_all(bind=engine)

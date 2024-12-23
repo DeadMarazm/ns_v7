@@ -1,55 +1,89 @@
 from typing import Optional
-from app.data.models import ResultModel, db
+from sqlalchemy.orm import Session
+from app.data.models import Result as ResultModel
 from app.domain.result import Result
 
 
 class ResultRepository:
-    @staticmethod
-    def get_by_id(result_id: int) -> Optional[Result]:
-        result_model = ResultModel.query.get(result_id)
-        return ResultRepository._convert_to_domain(result_model)
+    """Репозиторий для работы с результатами тренировок."""
 
-    @staticmethod
-    def get_by_user(user_id: int) -> list[Result]:
-        result_models = ResultModel.query.filter_by(user_id=user_id).all()
-        return [ResultRepository._convert_to_domain(result) for result in result_models]
+    def __init__(self, db: Session):
+        self.db = db
 
-    @staticmethod
-    def get_by_workout(workout_id: int) -> list[Result]:
-        result_models = ResultModel.query.filter_by(workout_id=workout_id).all()
-        return [ResultRepository._convert_to_domain(result) for result in result_models]
+    def get_by_id(self, result_id: int) -> Optional[Result]:
+        """Получение результата по ID."""
+        try:
+            result_model = self.db.query(ResultModel).filter(ResultModel.id == result_id).first()
+            return self._convert_to_domain(result_model)
+        except Exception as e:
+            print(f"Error in get_by_id: {e}")
+            return None
 
-    @staticmethod
-    def get_by_user_and_workout(user_id: int, workout_id: int) -> Optional[Result]:
-        result_models = ResultModel.query.filter(
-            ResultModel.user_id == user_id,
-            ResultModel.workout_id == workout_id
-        ).order_by(ResultModel.date_posted.desc()).all()
-        return ResultRepository._convert_to_domain(result_models[0]) if result_models else None
+    def get_by_user(self, user_id: int) -> list[Result]:
+        """Получение результатов пользователя."""
+        try:
+            result_models = self.db.query(ResultModel).filter(ResultModel.user_id == user_id).all()
+            return [self._convert_to_domain(result) for result in result_models]
+        except Exception as e:
+            print(f"Error in get_by_user: {e}")
+            return []
 
-    @staticmethod
-    def save(result: Result) -> Result:
-        result_model = ResultModel.query.get(result.id)
+    def get_by_workout(self, workout_id: int) -> list[Result]:
+        """Получение результатов тренировки."""
+        try:
+            result_models = self.db.query(ResultModel).filter(ResultModel.workout_id == workout_id).all()
+            return [self._convert_to_domain(result) for result in result_models]
+        except Exception as e:
+            print(f"Error in get_by_workout: {e}")
+            return []
 
-        if result_model:
-            ResultRepository._update_existing(result_model, result)
-        else:
-            ResultRepository._create_new(result)
+    def get_by_user_and_workout(self, user_id: int, workout_id: int) -> Optional[Result]:
+        """Получение результата пользователя для конкретной тренировки."""
+        try:
+            result_model = self.db.query(ResultModel).filter(
+                ResultModel.user_id == user_id,
+                ResultModel.workout_id == workout_id
+            ).order_by(ResultModel.date_posted.desc()).first()
+            return self._convert_to_domain(result_model)
+        except Exception as e:
+            print(f"Error in get_by_user_and_workout: {e}")
+            return None
 
-        db.session.commit()
-        return result
+    def save(self, result: Result) -> Result:
+        """Сохранение результата."""
+        try:
+            result_model = ResultModel(
+                user_id=result.user_id,
+                workout_id=result.workout_id,
+                confirm=result.confirm,
+                date_posted=result.date_posted
+            )
+            self.db.add(result_model)
+            self.db.commit()
+            self.db.refresh(result_model)
+            return self._convert_to_domain(result_model)
+        except Exception as e:
+            self.db.rollback()
+            print(f"Error in save: {e}")
+            raise
 
-    @staticmethod
-    def delete(result_id: int) -> bool:
-        result_model = ResultModel.query.get(result_id)
-        if not result_model:
-            raise ValueError(f"Result with id {result_id} does not exist.")
-        db.session.delete(result_model)
-        db.session.commit()
-        return True
+    def delete(self, result_id: int) -> bool:
+        """Удаление результата."""
+        try:
+            result_model = self.db.query(ResultModel).filter(ResultModel.id == result_id).first()
+            if not result_model:
+                raise ValueError(f"Result with id {result_id} does not exist.")
+            self.db.delete(result_model)
+            self.db.commit()
+            return True
+        except Exception as e:
+            self.db.rollback()
+            print(f"Error in delete: {e}")
+            raise
 
     @staticmethod
     def _convert_to_domain(result_model: ResultModel) -> Optional[Result]:
+        """Преобразование модели в доменный объект."""
         if not result_model:
             return None
 
@@ -60,22 +94,3 @@ class ResultRepository:
             confirm=result_model.confirm,
             date_posted=result_model.date_posted
         )
-
-    @staticmethod
-    def _update_existing(result_model: ResultModel, result: Result):
-        result_model.confirm = result.confirm
-        result_model.user_id = result.user_id
-        result_model.workout_id = result.workout_id
-        result_model.date_posted = result.date_posted
-
-    @staticmethod
-    def _create_new(result: Result):
-        result_model = ResultModel(
-            user_id=result.user_id,
-            workout_id=result.workout_id,
-            confirm=result.confirm,
-            date_posted=result.date_posted
-        )
-        db.session.add(result_model)
-        db.session.flush()
-        result.id = result_model.id

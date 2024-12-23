@@ -1,29 +1,66 @@
 from typing import Optional
-from werkzeug.security import generate_password_hash
-from app.data.models import UserModel, db
+from sqlalchemy.orm import Session
 from app.domain.user import User
+from app.data.models import User as UserModel
 
 
 class UserRepository:
-    @staticmethod
-    def get_user_by_id(user_id: int) -> Optional[User]:
-        user_model = UserModel.query.get(user_id)
-        return UserRepository._convert_to_domain(user_model)
+    """Репозиторий для работы с пользователями."""
 
     @staticmethod
-    def save_user(user: User) -> User:
-        user_model = UserModel.query.get(user.id)
+    def get_user_by_id(db: Session, user_id: int):
+        """Получение пользователя по ID."""
+        try:
+            return db.query(UserModel).filter(UserModel.id == user_id).first()
+        except Exception as e:
+            print(f"Error in get_user_by_id: {e}")
+            return None
 
-        if user_model:
-            UserRepository._update_existing_user(user_model, user)
-        else:
-            UserRepository._create_new_user(user)
+    @staticmethod
+    def get_by_username(db: Session, username: str):
+        """Получение пользователя по имени пользователя."""
+        try:
+            return db.query(UserModel).filter(UserModel.username == username).first()
+        except Exception as e:
+            print(f"Error in get_by_username: {e}")
+            return None
 
-        db.session.commit()
-        return user
+    @staticmethod
+    def get_by_email(db: Session, email: str) -> Optional[User]:
+        """Получение пользователя по email."""
+        try:
+            user_model = db.query(UserModel).filter_by(email=email).first()
+            return UserRepository._convert_to_domain(user_model)
+        except Exception as e:
+            print(f"Error in get_by_email: {e}")
+            return None
+
+    @staticmethod
+    def save_user(db: Session, user: User):
+        """Сохранение пользователя."""
+        try:
+            user_model = UserModel(
+                id=user.id,
+                username=user.username,
+                email=user.email,
+                password_hash=user.password_hash,
+                active=user.active,
+                confirmed_at=user.confirmed_at,
+                uuid=user.uuid
+            )
+            db.add(user_model)
+            db.commit()
+            db.refresh(user_model)
+            return UserRepository._convert_to_domain(user_model)
+
+        except Exception as e:
+            db.rollback()
+            print(f"Error in save_user: {e}")
+            raise
 
     @staticmethod
     def _convert_to_domain(user_model: UserModel) -> Optional[User]:
+        """Преобразование модели в доменный объект."""
         if not user_model:
             return None
 
@@ -33,36 +70,6 @@ class UserRepository:
             email=user_model.email,
             password_hash=user_model.password_hash,
             active=user_model.active,
-            confirmed_at=user_model.confirmed_at
+            confirmed_at=user_model.confirmed_at,
+            uuid=user_model.uuid
         )
-
-    @staticmethod
-    def _update_existing_user(user_model: UserModel, user: User):
-        user_model.username = user.username
-        user_model.email = user.email
-        if user.password:
-            user_model.password_hash = generate_password_hash(user.password)
-
-    @staticmethod
-    def _create_new_user(user: User):
-        UserRepository._validate_unique_fields(user)
-
-        user_model = UserModel(
-            username=user.username,
-            email=user.email,
-            password_hash=generate_password_hash(user.password) if user.password else None,
-            active=user.active,
-            confirmed_at=user.confirmed_at
-        )
-        db.session.add(user_model)
-        db.session.flush()
-        user.id = user_model.id
-
-    class UserAlreadyExistsError(Exception):
-        pass
-
-    @staticmethod
-    def _validate_unique_fields(user: User):
-        if UserModel.query.filter_by(username=user.username).first():
-            raise UserAlreadyExistsError(f"Username '{user.username}' already exists")
-

@@ -4,56 +4,68 @@ from sqlalchemy import (
     Boolean, Column, DateTime,
     ForeignKey, Integer, String, Text
 )
-from app.core.extensions import db
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from app.core.extensions import Base
+import uuid
 
 
-roles_users = db.Table(
-    'roles_users',
-    db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
-    db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
-)
+class RolesUsers(Base):
+    """Модель связи между ролями и пользователями."""
+    __tablename__ = 'roles_users'
+    user_id: Mapped[int] = Column(Integer, ForeignKey('user.id'), primary_key=True)
+    role_id: Mapped[int] = Column(Integer, ForeignKey('role.id'), primary_key=True)
 
 
-class UserModel(db.Model):
+class User(Base):
+    """Модель пользователя."""
     __tablename__ = "user"
 
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    username: Mapped[str] = Column(String(64), unique=True)
-    email: Mapped[str] = Column(String(120), unique=True)
-    password_hash: Mapped[str] = Column(String(128))
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
+    username: Mapped[str] = Column(String(64), unique=True, nullable=False)
+    email: Mapped[str] = Column(String(120), unique=True, nullable=False)
+    password_hash: Mapped[str] = Column(String(128), nullable=False)
     active: Mapped[bool] = Column(Boolean, default=True)
     confirmed_at: Mapped[datetime] = Column(DateTime, nullable=True)
+    uuid: Mapped[uuid.UUID] = Column(PG_UUID(as_uuid=True), unique=True, default=uuid.uuid4)
 
-    roles = relationship("Role", backref="users")
-    results = relationship("Result", backref="user")
+    roles: Mapped[list["Role"]] = relationship("Role", secondary="roles_users", back_populates="users")
+    results: Mapped[list["Result"]] = relationship("Result", back_populates="user")
 
 
-class RoleModel(db.Model):
+class Role(Base):
+    """Модель роли."""
     __tablename__ = "role"
 
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    name: Mapped[str] = Column(String(80), unique=True)
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = Column(String(80), unique=True, nullable=False)
     description: Mapped[str] = Column(String(255))
 
+    users: Mapped[list["User"]] = relationship("User", secondary="roles_users", back_populates="roles")
 
-class WorkoutModel(db.Model):
+
+class Workout(Base):
+    """Модель тренировки."""
     __tablename__ = "workout"
 
-    id: Mapped[int] = Column(Integer, primary_key=True)
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = Column(String(100), nullable=False)
     warm_up: Mapped[str] = Column(Text, nullable=False)
     workout: Mapped[str] = Column(Text, nullable=False)
     description: Mapped[str] = Column(Text, nullable=False)
     date_posted: Mapped[datetime] = Column(DateTime, nullable=False, default=datetime.now)
 
-    results = relationship("Result", backref="workout")
+    results: Mapped[list["Result"]] = relationship("Result", back_populates="workout")
 
 
-class ResultModel(db.Model):
+class Result(Base):
+    """Модель результата тренировки."""
     __tablename__ = "result"
 
-    id: Mapped[int] = Column(Integer, primary_key=True)
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
     confirm: Mapped[bool] = Column(Boolean)
     date_posted: Mapped[datetime] = Column(DateTime, nullable=False, default=datetime.now)
-    user_id: Mapped[int] = Column(Integer, ForeignKey("user.id"))
-    workout_id: Mapped[int] = Column(Integer, ForeignKey("workout.id"))
+    user_id: Mapped[int] = Column(Integer, ForeignKey("user.id"), nullable=False)
+    workout_id: Mapped[int] = Column(Integer, ForeignKey("workout.id"), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="results")
+    workout: Mapped["Workout"] = relationship("Workout", back_populates="results")
