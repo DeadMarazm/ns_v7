@@ -29,8 +29,12 @@ git pull origin master
 
 
 5. Docker
+Старт: docker-compose up --build
+
 docker build -t ns_v7_image .
 docker run --name ns_v7_container -p 5000:5000 ns_v7_image
+docker-compose up --build
+docker logs name ns_v7_container -f
 
 
 6. запуск проекта run.py

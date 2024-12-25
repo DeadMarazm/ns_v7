@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  ns_v7_app:
+    image: ns_v7_image
+    ports:
+      - "5000:5000"
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_APP=run.py
+      # Можно добавить другие переменные окружения, если необходимо
