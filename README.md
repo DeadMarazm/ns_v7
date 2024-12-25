@@ -23,9 +23,17 @@ flask delete_db
 Запуск:
 pytest
 
+4. Работа с git
+git checkout master
+git pull origin master
 
 
-4. запуск проекта run.py
+5. Docker
+docker build -t ns_v7_image .
+docker run --name ns_v7_container -p 5000:5000 ns_v7_image
+
+
+6. запуск проекта run.py
 
 
 

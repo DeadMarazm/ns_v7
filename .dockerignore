@@ -1,0 +1,22 @@
+# Исключаем виртуальные окружения и временные файлы
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.env
+instance/
+.mypy_cache/
+.pytest_cache/
+
+# Исключаем файлы IDE
+.idea/
+.vscode/
+
+# Исключаем артефакты сборки
+build/
+dist/
+*.egg-info/
